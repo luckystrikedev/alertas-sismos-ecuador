@@ -24,7 +24,7 @@ MAX_LATITUDE = 1.6
 MIN_LONGITUDE = -81.5
 MAX_LONGITUDE = -75.0
 
-MIN_MAGNITUDE = 4.0
+MIN_MAGNITUDE = 2.3
 
 # Cuantas horas hacia atras revisar en cada corrida
 LOOKBACK_HOURS = 6
