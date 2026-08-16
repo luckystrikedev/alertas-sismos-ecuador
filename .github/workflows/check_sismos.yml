@@ -2,12 +2,11 @@ name: Alertas de sismos Ecuador
 
 on:
   schedule:
-    # Corre cada 10 minutos. GitHub puede retrasarlo un poco en horas pico.
     - cron: "*/10 * * * *"
-  workflow_dispatch: {}  # permite correrlo manualmente desde la pestaña Actions
+  workflow_dispatch: {}
 
 permissions:
-  contents: write  # necesario para poder guardar sent_ids.json de vuelta al repo
+  contents: write
 
 jobs:
   check-sismos:
@@ -30,7 +29,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python sismos_bot.py
 
-- name: Guardar historial de sismos ya notificados
+      - name: Guardar historial de sismos ya notificados
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
