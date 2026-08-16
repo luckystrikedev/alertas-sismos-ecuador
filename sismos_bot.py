@@ -3,7 +3,7 @@ Bot de alertas sismicas para Ecuador via Telegram.
 
 Consulta la API publica de USGS (sin API key) filtrada a la caja
 geografica de Ecuador, y envia un mensaje de Telegram por cada sismo
-nuevo (magnitud 4.0+) que no se haya notificado antes.
+nuevo que no se haya notificado antes.
 
 Requiere dos variables de entorno:
   TELEGRAM_BOT_TOKEN  -> token que te dio BotFather
@@ -35,10 +35,21 @@ SENT_IDS_FILE = Path(__file__).parent / "sent_ids.json"
 
 
 def load_sent_ids() -> set:
-    if SENT_IDS_FILE.exists():
+    """Carga los IDs ya notificados. Tolera archivo inexistente, vacio o corrupto."""
+    if not SENT_IDS_FILE.exists():
+        return set()
+
+    if SENT_IDS_FILE.stat().st_size == 0:
+        return set()
+
+    try:
         with open(SENT_IDS_FILE, "r", encoding="utf-8") as f:
-            return set(json.load(f))
-    return set()
+            data = json.load(f)
+            return set(data)
+    except (json.JSONDecodeError, ValueError):
+        # Archivo corrupto: empezamos de cero en vez de romper el bot
+        print("Aviso: sent_ids.json no era JSON valido, se reinicia vacio.", file=sys.stderr)
+        return set()
 
 
 def save_sent_ids(ids: set) -> None:
@@ -125,8 +136,11 @@ def main() -> None:
         sent_ids.add(event_id)
         new_count += 1
 
+    # Siempre guardamos, incluso si new_count es 0, para asegurar que el
+    # archivo exista y tenga JSON valido en la proxima corrida.
+    save_sent_ids(sent_ids)
+
     if new_count:
-        save_sent_ids(sent_ids)
         print(f"Se enviaron {new_count} alerta(s) nueva(s).")
     else:
         print("No hay sismos nuevos que reportar.")
