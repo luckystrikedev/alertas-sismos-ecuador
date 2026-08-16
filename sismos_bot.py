@@ -6,8 +6,8 @@ geografica de Ecuador, y envia un mensaje de Telegram por cada sismo
 nuevo que no se haya notificado antes.
 
 Requiere dos variables de entorno:
-  TELEGRAM_BOT_TOKEN  -> token que te dio BotFather
-  TELEGRAM_CHAT_ID    -> tu chat id (a donde llegan las alertas)
+  TELEGRAM_BOT_TOKEN  -> 8902023933:AAFxar44LNMvaI9LbjsQYxIidECLn5VKy4U
+  TELEGRAM_CHAT_ID    -> 1267936485
 """
 
 import json
@@ -47,13 +47,11 @@ def load_sent_ids() -> set:
             data = json.load(f)
             return set(data)
     except (json.JSONDecodeError, ValueError):
-        # Archivo corrupto: empezamos de cero en vez de romper el bot
         print("Aviso: sent_ids.json no era JSON valido, se reinicia vacio.", file=sys.stderr)
         return set()
 
 
 def save_sent_ids(ids: set) -> None:
-    # Solo guardamos los ultimos 500 para que el archivo no crezca sin limite
     trimmed = list(ids)[-500:]
     with open(SENT_IDS_FILE, "w", encoding="utf-8") as f:
         json.dump(trimmed, f)
@@ -80,11 +78,11 @@ def fetch_earthquakes() -> list:
 
 def format_message(feature: dict) -> str:
     props = feature["properties"]
-    coords = feature["geometry"]["coordinates"]  # [lon, lat, depth_km]
+    coords = feature["geometry"]["coordinates"]
     lon, lat, depth = coords[0], coords[1], coords[2]
 
     event_time_utc = datetime.fromtimestamp(props["time"] / 1000, tz=timezone.utc)
-    event_time_ec = event_time_utc - timedelta(hours=5)  # Ecuador es UTC-5
+    event_time_ec = event_time_utc - timedelta(hours=5)
 
     magnitude = props.get("mag", "N/D")
     place = props.get("place", "Ubicacion desconocida")
@@ -136,8 +134,6 @@ def main() -> None:
         sent_ids.add(event_id)
         new_count += 1
 
-    # Siempre guardamos, incluso si new_count es 0, para asegurar que el
-    # archivo exista y tenga JSON valido en la proxima corrida.
     save_sent_ids(sent_ids)
 
     if new_count:
